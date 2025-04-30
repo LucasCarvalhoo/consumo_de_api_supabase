@@ -1,0 +1,1 @@
+# consumo_de_api_supabase
