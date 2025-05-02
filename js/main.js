@@ -94,7 +94,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const produtosAlterados = [];
 
         linhas.forEach(linha => {
-            const id = Number(linha.children[0].textContent.trim());
+            const id = linha.children[0].textContent.trim();
             const input = linha.querySelector('.estoque-input');
             const estoqueOriginal = parseInt(input.dataset.original);
             const estoqueAtual = parseInt(input.value);
