@@ -57,7 +57,7 @@ th {
     bottom: 10px;
     right: 10px;
     padding: 10px 20px;
-    background-color: #007bff;
+    background-color: #257762;
     color: white;
     border: none;
     border-radius: 6px;
@@ -67,6 +67,7 @@ th {
   
   .btn-salvar:hover {
     transform: scale(1.02);
+    background-color: #206453;
   }
   
   .btn-salvar:active {
