@@ -7,12 +7,14 @@ body {
 }
 
 .container {
-    max-width: 1000px;
+    position: relative;
+    min-width: 1000px;
     margin: 0;
     background-color: white;
     padding: 20px;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding-bottom: 15px;
 }
 
 h1 {
@@ -48,4 +50,24 @@ th {
     color: red;
     text-align: center;
     padding: 20px;
+}
+
+.btn-salvar{
+    display: none;
+    height: 2rem;
+    width: 4rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    z-index: 1000;
+    position: absolute;
+    margin-top: 15px;
+}
+
+.btn-salvar:hover{
+    transform: scale(1.02);
+}
+
+.btn-salvar:active{
+    transform: scale(1);
 }
