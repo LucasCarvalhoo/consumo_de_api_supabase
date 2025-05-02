@@ -1,25 +1,18 @@
 document.addEventListener('DOMContentLoaded', function () {
 
-    const URL_DO_SUPABASE = 'https://zqnwarooewrabsxkemtt.supabase.co';
-    const CHAVE_ANONIMA = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpxbndhcm9vZXdyYWJzeGtlbXR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYwMjkxNDcsImV4cCI6MjA2MTYwNTE0N30.62dffZaQtdL0ssJFnOMo1WXQLgtdETwiDeaePcQW1bY';
-
-    const supabase = window.supabase.createClient(URL_DO_SUPABASE, CHAVE_ANONIMA)
-
-    // -------------------
+    const URL_DO_SUPABASE = 'https://ibkfmvafllxdlimvdxkm.supabase.co';
+    const CHAVE_ANONIMA = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlia2ZtdmFmbGx4ZGxpbXZkeGttIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYwMzA2OTMsImV4cCI6MjA2MTYwNjY5M30.t_kC0_bj7fhxrPJDns2BLMTRVQ1sdj-TPa-iPXgqbho';
+    const supabase = window.supabase.createClient(URL_DO_SUPABASE, CHAVE_ANONIMA);
 
     function formatarData(textoData) {
         if (!textoData) return '-';
-
         const data = new Date(textoData);
-
-        return data.toDateString('pt-BR') + ' ' + data.toTimeString('pt-BR');
+        return data.toLocaleDateString('pt-BR') + ' ' + data.toLocaleTimeString('pt-BR');
     }
 
     function formatarPreco(preco) {
         return 'R$ ' + Number(preco).toFixed(2).replace('.', ',');
     }
-
-    // ----------------------
 
     async function buscarEMostrarProdutos() {
         try {
@@ -28,47 +21,125 @@ document.addEventListener('DOMContentLoaded', function () {
                 .select('*')
                 .order('id');
 
-            if (error) {
-                throw new Error('Erro ao buscar produtos: ' + error.message);
-            }
+            if (error) throw new Error('Erro ao buscar produtos: ' + error.message);
 
             document.getElementById('mensagemCarregando').style.display = 'none';
 
             if (!data || data.length === 0) {
                 document.getElementById('mensagemErro').style.display = 'block';
-                document.getElementById('mensagemErro').textContent = 'Nenhum produto encontrado na tabela.'
+                document.getElementById('mensagemErro').textContent = 'Nenhum produto encontrado na tabela.';
                 return;
             }
 
             const corpoTabela = document.getElementById('corpoDaTabela');
-
             corpoTabela.innerHTML = '';
 
             data.forEach(produto => {
                 const linha = document.createElement('tr');
 
                 linha.innerHTML = `
-          <td>${produto.id}</td>
-          <td>${produto.nome || '-'}</td>
-          <td>${produto.descricao || '-'}</td>
-          <td>${formatarPreco(produto.preco)}</td>
-          <td>${produto.estoque}</td>
-          <td>${formatarData(produto.created_at)}</td>
+            <td>${produto.id}</td>
+            <td>${produto.nome || '-'}</td>
+            <td>${produto.descricao || '-'}</td>
+            <td>${formatarPreco(produto.preco)}</td>
+            <td>
+              <input type="number" 
+                     value="${produto.estoque}" 
+                     min="0"
+                     class="estoque-input"
+                     data-original="${produto.estoque}"
+                     style="width: 60px; border: none;" />
+            </td>
+            <td>${formatarData(produto.created_at)}</td>
           `;
 
                 corpoTabela.appendChild(linha);
             });
 
+            document.querySelectorAll('.estoque-input').forEach(input => {
+                input.addEventListener('input', function () {
+                    const original = parseInt(this.dataset.original);
+                    const atual = parseInt(this.value);
+                    const botao = document.getElementById('button');
+                    if (original !== atual) {
+                        botao.style.display = 'inline-block';
+                    } else {
+                        const algumAlterado = Array.from(document.querySelectorAll('.estoque-input')).some(inp => {
+                            return parseInt(inp.dataset.original) !== parseInt(inp.value);
+                        });
+                        if (!algumAlterado) botao.style.display = 'none';
+                    }
+                });
+
+                input.addEventListener('keydown', function (e) {
+                    const permitido = ['ArrowUp', 'ArrowDown', 'Tab'];
+                    if (!permitido.includes(e.key)) e.preventDefault();
+                });
+
+                input.addEventListener('paste', e => e.preventDefault());
+            });
+
             document.getElementById('tabelaProdutos').style.display = 'table';
+
         } catch (erro) {
             document.getElementById('mensagemCarregando').style.display = 'none';
-
             document.getElementById('mensagemErro').style.display = 'block';
             document.getElementById('mensagemErro').textContent = erro.message;
-
-            console.log('Erro: ', erro);
+            console.error('Erro: ', erro);
         }
     }
 
+    document.getElementById('button').addEventListener('click', async function () {
+        const linhas = document.querySelectorAll('#corpoDaTabela tr');
+        const produtosAlterados = [];
+
+        linhas.forEach(linha => {
+            const id = Number(linha.children[0].textContent.trim());
+            const input = linha.querySelector('.estoque-input');
+            const estoqueOriginal = parseInt(input.dataset.original);
+            const estoqueAtual = parseInt(input.value);
+
+            if (!isNaN(estoqueAtual) && estoqueAtual !== estoqueOriginal) {
+                produtosAlterados.push({ id, estoque: estoqueAtual, input });
+            }
+        });
+
+        if (produtosAlterados.length === 0) {
+            alert('Nenhuma alteração detectada.');
+            return;
+        }
+
+        try {
+            let erros = [];
+
+            for (const produto of produtosAlterados) {
+                const { error } = await supabase
+                    .from('produtos')
+                    .update({ estoque: produto.estoque })
+                    .eq('id', produto.id);
+
+                if (error) {
+                    console.error(`Erro ao atualizar produto ${produto.id}:`, error.message);
+                    erros.push(produto.id);
+                } else {
+                    produto.input.dataset.original = produto.estoque;
+                }
+            }
+
+            if (erros.length > 0) {
+                alert(`Erro ao atualizar os produtos: ${erros.join(', ')}`);
+            } else {
+                alert('Todos os estoques foram atualizados com sucesso!');
+                document.getElementById('button').style.display = 'none';
+            }
+
+            await buscarEMostrarProdutos(); // Recarrega
+
+        } catch (err) {
+            console.error('Erro inesperado:', err);
+            alert('Erro ao salvar alterações: ' + err.message);
+        }
+    });
+
     buscarEMostrarProdutos();
-})
+});
