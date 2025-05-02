@@ -62,7 +62,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     const original = parseInt(this.dataset.original);
                     const atual = parseInt(this.value);
                     const botao = document.getElementById('button');
-            
+
                     if (original !== atual) {
                         botao.style.display = 'inline-block';
                         container.style.paddingBottom = '80px';
@@ -70,11 +70,11 @@ document.addEventListener('DOMContentLoaded', function () {
                         const algumAlterado = Array.from(document.querySelectorAll('.estoque-input')).some(inp => {
                             return parseInt(inp.dataset.original) !== parseInt(inp.value);
                         });
-            
+
                         if (!algumAlterado) {
                             botao.style.display = 'none';
                             container.style.paddingBottom = '20px';
-                        }                        
+                        }
                     }
                 });
 
@@ -106,8 +106,8 @@ document.addEventListener('DOMContentLoaded', function () {
             const estoqueOriginal = parseInt(input.dataset.original);
             const estoqueAtual = parseInt(input.value);
 
-            if (!isNaN(estoqueAtual) && estoqueAtual !== estoqueOriginal) {
-                produtosAlterados.push({ id, estoque: estoqueAtual, input });
+            if (estoqueOriginal !== estoqueAtual) {
+                produtosAlterados.push({ id, estoque: estoqueAtual });
             }
         });
 
@@ -117,8 +117,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         try {
-            let erros = [];
-
             for (const produto of produtosAlterados) {
                 const { error } = await supabase
                     .from('produtos')
@@ -126,24 +124,20 @@ document.addEventListener('DOMContentLoaded', function () {
                     .eq('id', produto.id);
 
                 if (error) {
-                    console.error(`Erro ao atualizar produto ${produto.id}:`, error.message);
-                    erros.push(produto.id);
-                } else {
-                    produto.input.dataset.original = produto.estoque;
+                    throw new Error(`Erro ao atualizar produto ${produto.id}: ${error.message}`);
                 }
             }
 
-            if (erros.length > 0) {
-                alert(`Erro ao atualizar os produtos: ${erros.join(', ')}`);
-            } else {
-                alert('Todos os estoques foram atualizados com sucesso!');
-                document.getElementById('button').style.display = 'none';
-            }
+            alert('Estoque atualizado com sucesso!');
 
-            await buscarEMostrarProdutos(); // Recarrega
+            const botao = document.getElementById('button');
+            const container = document.querySelector('.container');
+            botao.style.display = 'none';
+            container.style.paddingBottom = '20px';
 
+            buscarEMostrarProdutos();
         } catch (err) {
-            console.error('Erro inesperado:', err);
+            console.error(err);
             alert('Erro ao salvar alterações: ' + err.message);
         }
     });
