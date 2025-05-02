@@ -58,16 +58,23 @@ document.addEventListener('DOMContentLoaded', function () {
 
             document.querySelectorAll('.estoque-input').forEach(input => {
                 input.addEventListener('input', function () {
+                    const container = document.querySelector('.container');
                     const original = parseInt(this.dataset.original);
                     const atual = parseInt(this.value);
                     const botao = document.getElementById('button');
+            
                     if (original !== atual) {
                         botao.style.display = 'inline-block';
+                        container.style.paddingBottom = '80px';
                     } else {
                         const algumAlterado = Array.from(document.querySelectorAll('.estoque-input')).some(inp => {
                             return parseInt(inp.dataset.original) !== parseInt(inp.value);
                         });
-                        if (!algumAlterado) botao.style.display = 'none';
+            
+                        if (!algumAlterado) {
+                            botao.style.display = 'none';
+                            container.style.paddingBottom = '20px';
+                        }                        
                     }
                 });
 
